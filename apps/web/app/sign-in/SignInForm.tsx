@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 
@@ -64,6 +65,9 @@ export function SignInForm() {
       <button className="button" disabled={submitting} type="submit">
         {submitting ? "Signing in..." : "Sign in"}
       </button>
+      <p className="muted">
+        <Link href="/forgot-password">Forgot password?</Link>
+      </p>
     </form>
   );
 }

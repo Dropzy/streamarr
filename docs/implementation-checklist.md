@@ -27,7 +27,7 @@
 - [x] Add secure HTTP-only sessions.
 - [x] Add same-origin POST checks for setup/auth APIs.
 - [x] Add login rate limiting.
-- [ ] Add password reset workflow.
+- [x] Add password reset workflow.
 - [x] Add protected app and admin route layouts.
 
 ## Phase 3: Application Shell

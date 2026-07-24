@@ -1,12 +1,16 @@
-export default function ResetPasswordPage() {
+import { ResetPasswordForm } from "./ResetPasswordForm";
+
+export default async function ResetPasswordPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ token?: string }>;
+}) {
+  const { token } = await searchParams;
+
   return (
     <main className="content">
       <h1>Reset password</h1>
-      <section className="card">
-        <p className="muted">
-          Password reset tokens will be single-use and time-limited.
-        </p>
-      </section>
+      <ResetPasswordForm token={token ?? ""} />
     </main>
   );
 }
