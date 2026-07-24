@@ -6,11 +6,8 @@ import {
   createBrowserSourceToken,
   hashBrowserSourceToken,
 } from "@/server/browserSourceTokens";
+import { browserSourceUrl } from "@/server/publicUrls";
 import { requireSameOrigin } from "@/server/requestGuards";
-
-function browserSourceUrl(request: Request, token: string): string {
-  return new URL(`/source/${token}`, request.url).toString();
-}
 
 export async function POST(
   request: Request,
@@ -118,9 +115,7 @@ export async function POST(
     });
 
     return {
-      browserSourceUrl: createdBrowserSource
-        ? browserSourceUrl(request, token)
-        : null,
+      browserSourceUrl: createdBrowserSource ? browserSourceUrl(token) : null,
       version,
     };
   });
