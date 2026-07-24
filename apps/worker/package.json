@@ -13,7 +13,12 @@
     "@streamarr/config": "workspace:*",
     "@streamarr/database": "workspace:*",
     "@streamarr/events": "workspace:*",
+    "@streamarr/validation": "workspace:*",
     "ioredis": "^5.11.1",
-    "tsx": "^4.19.2"
+    "tsx": "^4.19.2",
+    "ws": "^8.21.1"
+  },
+  "devDependencies": {
+    "@types/ws": "^8.18.1"
   }
 }

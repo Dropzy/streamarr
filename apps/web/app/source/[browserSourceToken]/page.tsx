@@ -8,6 +8,7 @@ import {
 } from "@streamarr/validation";
 
 import { hashBrowserSourceToken } from "@/server/browserSourceTokens";
+import { BrowserSourceRuntime } from "./BrowserSourceRuntime";
 
 function layerStyle(layer: AlertBoxLayer, document: OverlayDocument) {
   return {
@@ -77,6 +78,7 @@ export default async function BrowserSourcePage({
   const layers = document.layers
     .filter((layer) => layer.visible)
     .sort((left, right) => left.zIndex - right.zIndex);
+  const alertLayer = layers.find((layer) => layer.type === "alert-box") ?? null;
 
   return (
     <main
@@ -118,6 +120,10 @@ export default async function BrowserSourcePage({
           />
         ),
       )}
+      <BrowserSourceRuntime
+        alertLayer={alertLayer}
+        token={browserSourceToken}
+      />
     </main>
   );
 }

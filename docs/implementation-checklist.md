@@ -73,6 +73,6 @@
 
 - [x] Add tokenized browser-source route placeholder.
 - [x] Load currently published overlay by token.
-- [ ] Add local WebSocket gateway.
-- [ ] Add alert queue and acknowledgement.
-- [ ] Add reconnect and diagnostics mode.
+- [x] Add local WebSocket gateway.
+- [x] Add alert queue and acknowledgement.
+- [x] Add reconnect and diagnostics mode.

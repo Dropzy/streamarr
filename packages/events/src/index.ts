@@ -1,3 +1,4 @@
+import { createHmac } from "node:crypto";
 import Redis from "ioredis";
 import { Prisma, prisma } from "@streamarr/database";
 import {
@@ -14,6 +15,30 @@ export type EventDeliveryQueuePayload = {
   deliveryId: string;
   streamEventId: string;
 };
+
+export type BrowserSourceAlertMessage = {
+  deliveryId: string;
+  event: StreamEventEnvelope;
+  type: "alert";
+};
+
+export type BrowserSourceStatusMessage = {
+  connectedSources: number;
+  queuedDeliveries: number;
+  type: "diagnostics";
+};
+
+export type BrowserSourceServerMessage =
+  BrowserSourceAlertMessage | BrowserSourceStatusMessage;
+
+export type BrowserSourceClientMessage =
+  | {
+      deliveryId: string;
+      type: "ack";
+    }
+  | {
+      type: "diagnostics";
+    };
 
 type PersistedEventDelivery = {
   browserSourceId: string;
@@ -33,6 +58,10 @@ export function normalizeSimulatorEvent(input: unknown): StreamEventEnvelope {
 
 export function eventIdempotencyKey(event: StreamEventEnvelope): string {
   return `${event.workspaceId}:${event.source}:${event.sourceEventId}`;
+}
+
+export function hashBrowserSourceToken(token: string, secret: string): string {
+  return createHmac("sha256", secret).update(token).digest("base64url");
 }
 
 export function escapeTemplateValue(value: unknown): string {

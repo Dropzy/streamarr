@@ -12,6 +12,8 @@ export const configSchema = z
       .enum(["development", "test", "production"])
       .default("development"),
     PORT: z.coerce.number().int().positive().default(3000),
+    BROWSER_SOURCE_WS_PORT: z.coerce.number().int().positive().default(3002),
+    NEXT_PUBLIC_BROWSER_SOURCE_WS_PORT: z.string().default("3002"),
     TRUST_PROXY: booleanFromString.default(false),
     REGISTRATION_ENABLED: booleanFromString.default(false),
     DATABASE_URL: z.string().min(1),

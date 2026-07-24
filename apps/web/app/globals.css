@@ -192,6 +192,42 @@ select {
   gap: 16px;
 }
 
+.runtime-alert {
+  background: rgb(13 17 23 / 82%);
+  border: 1px solid rgb(244 247 251 / 22%);
+  border-radius: 8px;
+  color: #f4f7fb;
+  font-size: 42px;
+  left: 28%;
+  padding: 24px;
+  position: fixed;
+  text-align: center;
+  top: 38%;
+  width: 44%;
+  z-index: 999;
+}
+
+.source-diagnostics {
+  background: rgb(13 17 23 / 78%);
+  border: 1px solid rgb(244 247 251 / 16%);
+  border-radius: 6px;
+  bottom: 12px;
+  color: #aab4c2;
+  font-size: 12px;
+  left: 12px;
+  padding: 6px 8px;
+  position: fixed;
+  z-index: 1000;
+}
+
+.source-diagnostics[data-state="connected"] {
+  color: var(--accent);
+}
+
+.source-diagnostics[data-state="disconnected"] {
+  color: var(--warn);
+}
+
 .toolbar {
   align-items: center;
   border-bottom: 1px solid var(--line);
