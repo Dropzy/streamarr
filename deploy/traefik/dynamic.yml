@@ -1,0 +1,10 @@
+http:
+  routers:
+    streamarr:
+      rule: Host(`streamarr.example.com`)
+      service: streamarr
+  services:
+    streamarr:
+      loadBalancer:
+        servers:
+          - url: http://web:3000

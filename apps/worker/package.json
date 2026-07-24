@@ -1,0 +1,16 @@
+{
+  "name": "@streamarr/worker",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc --noEmit",
+    "dev": "tsx src/index.ts",
+    "lint": "tsc --noEmit",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "@streamarr/config": "workspace:*",
+    "tsx": "^4.19.2"
+  }
+}

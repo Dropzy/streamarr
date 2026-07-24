@@ -1,0 +1,225 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum InstanceRole {
+  INSTANCE_ADMIN
+  STANDARD_USER
+}
+
+enum WorkspaceRole {
+  OWNER
+  ADMINISTRATOR
+  EDITOR
+  VIEWER
+}
+
+enum OverlayVersionState {
+  DRAFT
+  PUBLISHED
+}
+
+model InstanceSetting {
+  key       String   @id
+  value     Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model User {
+  id           String            @id @default(cuid())
+  email        String            @unique
+  passwordHash String
+  role         InstanceRole      @default(STANDARD_USER)
+  suspendedAt  DateTime?
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+  sessions     Session[]
+  memberships  WorkspaceMember[]
+  auditLogs    AuditLog[]
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  tokenHash String   @unique
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  userId    String
+  tokenHash String   @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+}
+
+model Workspace {
+  id          String            @id @default(cuid())
+  name        String
+  slug        String            @unique
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  members     WorkspaceMember[]
+  channels    Channel[]
+  overlays    Overlay[]
+  assets      Asset[]
+  streamEvents StreamEvent[]
+}
+
+model WorkspaceMember {
+  id          String        @id @default(cuid())
+  workspaceId String
+  userId      String
+  role        WorkspaceRole
+  createdAt   DateTime      @default(now())
+  workspace   Workspace     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([workspaceId, userId])
+  @@index([userId])
+}
+
+model Channel {
+  id          String   @id @default(cuid())
+  workspaceId String
+  platform    String
+  externalId  String
+  displayName String
+  createdAt   DateTime @default(now())
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@unique([platform, externalId])
+  @@index([workspaceId])
+}
+
+model PlatformConnection {
+  id              String   @id @default(cuid())
+  workspaceId     String
+  platform        String
+  encryptedSecret String
+  tokenHealth     String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([workspaceId, platform])
+}
+
+model Overlay {
+  id                         String           @id @default(cuid())
+  workspaceId                String
+  name                       String
+  publishedVersionId         String?
+  createdAt                  DateTime         @default(now())
+  updatedAt                  DateTime         @updatedAt
+  workspace                  Workspace        @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  draft                      OverlayDraft?
+  versions                   OverlayVersion[]
+  browserSources             BrowserSource[]
+
+  @@index([workspaceId])
+}
+
+model OverlayDraft {
+  id        String   @id @default(cuid())
+  overlayId String   @unique
+  document  Json
+  updatedAt DateTime @updatedAt
+  overlay   Overlay  @relation(fields: [overlayId], references: [id], onDelete: Cascade)
+}
+
+model OverlayVersion {
+  id        String   @id @default(cuid())
+  overlayId String
+  version   Int
+  document  Json
+  state     OverlayVersionState @default(PUBLISHED)
+  createdAt DateTime @default(now())
+  overlay   Overlay  @relation(fields: [overlayId], references: [id], onDelete: Cascade)
+
+  @@unique([overlayId, version])
+}
+
+model BrowserSource {
+  id        String   @id @default(cuid())
+  overlayId String
+  tokenHash String   @unique
+  createdAt DateTime @default(now())
+  rotatedAt DateTime?
+  overlay   Overlay  @relation(fields: [overlayId], references: [id], onDelete: Cascade)
+}
+
+model StreamEvent {
+  id            String          @id @default(cuid())
+  workspaceId   String
+  type          String
+  source        String
+  sourceEventId String
+  payload       Json
+  occurredAt    DateTime
+  receivedAt    DateTime        @default(now())
+  workspace     Workspace       @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  deliveries    EventDelivery[]
+
+  @@unique([workspaceId, source, sourceEventId])
+  @@index([workspaceId, occurredAt])
+  @@index([workspaceId, type])
+}
+
+model EventDelivery {
+  id          String      @id @default(cuid())
+  streamEventId String
+  browserSourceId String
+  status      String
+  attempts    Int         @default(0)
+  lastError   String?
+  acknowledgedAt DateTime?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  streamEvent StreamEvent @relation(fields: [streamEventId], references: [id], onDelete: Cascade)
+
+  @@index([browserSourceId, status])
+}
+
+model Asset {
+  id          String   @id @default(cuid())
+  workspaceId String
+  storageKey  String
+  mimeType    String
+  sizeBytes   Int
+  createdAt   DateTime @default(now())
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId])
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  actorUserId String?
+  workspaceId String?
+  action      String
+  metadata    Json
+  createdAt   DateTime @default(now())
+  actor       User?    @relation(fields: [actorUserId], references: [id], onDelete: SetNull)
+
+  @@index([workspaceId, createdAt])
+  @@index([action])
+}
+
+model WorkerHeartbeat {
+  id        String   @id @default(cuid())
+  workerId  String   @unique
+  seenAt    DateTime @default(now())
+  metadata  Json
+}
