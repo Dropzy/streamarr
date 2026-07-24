@@ -1,13 +1,50 @@
-import { defaultAlertBoxLayer } from "@streamarr/validation";
+import { notFound } from "next/navigation";
+import { prisma } from "@streamarr/database";
+import { overlayDocumentSchema } from "@streamarr/validation";
 
-export default function OverlayEditorPage() {
-  const alertLayer = defaultAlertBoxLayer;
+import { getCurrentWorkspaceContext } from "@/server/workspaces";
+
+export default async function OverlayEditorPage({
+  params,
+}: {
+  params: Promise<{ overlayId: string }>;
+}) {
+  const { overlayId } = await params;
+  const { user } = await getCurrentWorkspaceContext();
+  const overlay = await prisma.overlay.findFirst({
+    where: {
+      id: overlayId,
+      workspace: {
+        members: {
+          some: {
+            userId: user.id,
+          },
+        },
+      },
+    },
+    include: {
+      draft: true,
+    },
+  });
+
+  if (!overlay?.draft) {
+    notFound();
+  }
+
+  const document = overlayDocumentSchema.parse(overlay.draft.document);
+  const alertLayer = document.layers.find(
+    (layer) => layer.type === "alert-box",
+  );
+
+  if (!alertLayer) {
+    notFound();
+  }
 
   return (
     <main>
       <div className="toolbar">
-        <strong>Starter Overlay</strong>
-        <span className="muted">Draft saved locally</span>
+        <strong>{overlay.name}</strong>
+        <span className="muted">Draft saved to database</span>
         <button type="button">Undo</button>
         <button type="button">Redo</button>
         <button type="button">Preview</button>

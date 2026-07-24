@@ -43,6 +43,9 @@
 
 - [x] Add shared overlay schema.
 - [x] Add starter Overlay Studio route.
+- [x] Add database-backed overlay creation.
+- [x] Add workspace-scoped overlay list.
+- [x] Load overlay drafts from PostgreSQL in the editor.
 - [ ] Add drag, resize and selection state.
 - [ ] Add autosave.
 - [ ] Add undo and redo transaction grouping.
