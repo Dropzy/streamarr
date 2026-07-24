@@ -64,10 +64,10 @@
 
 - [x] Add normalized event envelope schema.
 - [x] Add safe alert-template interpolation.
-- [ ] Persist events.
-- [ ] Enqueue through Redis.
-- [ ] Add idempotency service.
-- [ ] Add delivery attempts and dead-letter handling.
+- [x] Persist events.
+- [x] Enqueue through Redis.
+- [x] Add idempotency service.
+- [x] Add delivery attempts and dead-letter handling.
 
 ## Phase 7: Browser Source
 

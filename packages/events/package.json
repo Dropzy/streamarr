@@ -11,6 +11,8 @@
     "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
-    "@streamarr/validation": "workspace:*"
+    "@streamarr/database": "workspace:*",
+    "@streamarr/validation": "workspace:*",
+    "ioredis": "^5.11.1"
   }
 }

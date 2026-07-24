@@ -11,6 +11,9 @@
   },
   "dependencies": {
     "@streamarr/config": "workspace:*",
+    "@streamarr/database": "workspace:*",
+    "@streamarr/events": "workspace:*",
+    "ioredis": "^5.11.1",
     "tsx": "^4.19.2"
   }
 }

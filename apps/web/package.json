@@ -13,6 +13,7 @@
     "@streamarr/auth": "workspace:*",
     "@streamarr/config": "workspace:*",
     "@streamarr/database": "workspace:*",
+    "@streamarr/events": "workspace:*",
     "@streamarr/validation": "workspace:*",
     "next": "^15.1.3",
     "react": "^19.0.0",
