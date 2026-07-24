@@ -1,7 +1,6 @@
 import { AppShell } from "@/components/AppShell";
 import { PageHeader } from "@/components/PageHeader";
 import { getCurrentUser } from "@/server/auth";
-import { redirect } from "next/navigation";
 
 const cards = [
   [
@@ -29,15 +28,11 @@ const cards = [
 export default async function DashboardPage() {
   const user = await getCurrentUser();
 
-  if (!user) {
-    redirect("/sign-in");
-  }
-
   return (
     <AppShell>
       <PageHeader
         title="Dashboard"
-        action={<span className="status">{user.email}</span>}
+        action={<span className="status">{user?.email}</span>}
       />
       <div className="grid">
         {cards.map(([title, value, detail]) => (

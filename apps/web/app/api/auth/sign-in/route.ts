@@ -2,8 +2,19 @@ import { createUserSession, verifyPassword } from "@streamarr/auth";
 import { prisma } from "@streamarr/database";
 
 import { sessionCookieName } from "@/server/auth";
+import {
+  checkRateLimit,
+  clientKey,
+  requireSameOrigin,
+} from "@/server/requestGuards";
 
 export async function POST(request: Request) {
+  const originError = requireSameOrigin(request);
+
+  if (originError) {
+    return originError;
+  }
+
   const body = (await request.json()) as {
     email?: unknown;
     password?: unknown;
@@ -12,6 +23,15 @@ export async function POST(request: Request) {
   const email =
     typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
   const password = typeof body.password === "string" ? body.password : "";
+  const rateLimitError = checkRateLimit({
+    key: clientKey(request, `sign-in:${email}`),
+    limit: 5,
+    windowMs: 60_000,
+  });
+
+  if (rateLimitError) {
+    return rateLimitError;
+  }
 
   const user = await prisma.user.findUnique({
     where: {

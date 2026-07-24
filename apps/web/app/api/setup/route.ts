@@ -2,10 +2,17 @@ import { createUserSession, hashPassword } from "@streamarr/auth";
 import { prisma } from "@streamarr/database";
 
 import { sessionCookieName } from "@/server/auth";
+import { requireSameOrigin } from "@/server/requestGuards";
 
 const minimumPasswordLength = 8;
 
 export async function POST(request: Request) {
+  const originError = requireSameOrigin(request);
+
+  if (originError) {
+    return originError;
+  }
+
   const body = (await request.json()) as {
     email?: unknown;
     password?: unknown;

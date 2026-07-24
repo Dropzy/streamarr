@@ -1,6 +1,17 @@
+import { redirect } from "next/navigation";
+import { prisma } from "@streamarr/database";
+
 import { SetupForm } from "./SetupForm";
 
-export default function SetupPage() {
+export const dynamic = "force-dynamic";
+
+export default async function SetupPage() {
+  const existingUsers = await prisma.user.count();
+
+  if (existingUsers > 0) {
+    redirect("/sign-in");
+  }
+
   return (
     <main className="content">
       <div className="topline">

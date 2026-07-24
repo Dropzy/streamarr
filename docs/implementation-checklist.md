@@ -25,10 +25,10 @@
 - [x] Implement first-run setup transaction.
 - [x] Add secure password hashing.
 - [x] Add secure HTTP-only sessions.
-- [ ] Add CSRF protection.
-- [ ] Add login rate limiting.
+- [x] Add same-origin POST checks for setup/auth APIs.
+- [x] Add login rate limiting.
 - [ ] Add password reset workflow.
-- [ ] Add reusable authorization middleware.
+- [x] Add protected app and admin route layouts.
 
 ## Phase 3: Application Shell
 
