@@ -46,8 +46,10 @@
 - [x] Add database-backed overlay creation.
 - [x] Add workspace-scoped overlay list.
 - [x] Load overlay drafts from PostgreSQL in the editor.
+- [x] Add autosave endpoint for validated draft documents.
+- [x] Add editable alert-box headline, body, position and duration controls.
 - [ ] Add drag, resize and selection state.
-- [ ] Add autosave.
+- [x] Add autosave.
 - [ ] Add undo and redo transaction grouping.
 - [ ] Add schema-driven inspector controls.
 
@@ -61,6 +63,7 @@
 ## Phase 6: Event System
 
 - [x] Add normalized event envelope schema.
+- [x] Add safe alert-template interpolation.
 - [ ] Persist events.
 - [ ] Enqueue through Redis.
 - [ ] Add idempotency service.
