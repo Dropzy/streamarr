@@ -48,7 +48,7 @@
 - [x] Load overlay drafts from PostgreSQL in the editor.
 - [x] Add autosave endpoint for validated draft documents.
 - [x] Add editable alert-box headline, body, position and duration controls.
-- [ ] Add drag, resize and selection state.
+- [x] Add drag, resize and selection state.
 - [x] Add autosave.
 - [ ] Add undo and redo transaction grouping.
 - [ ] Add schema-driven inspector controls.

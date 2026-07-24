@@ -277,14 +277,20 @@ select {
 }
 
 .layer {
-  background: rgb(50 199 165 / 18%);
   border: 1px solid var(--accent);
-  border-radius: 8px;
-  left: 23%;
-  padding: 18px;
+  cursor: grab;
+  overflow: hidden;
   position: absolute;
-  top: 34%;
-  width: 48%;
+  touch-action: none;
+  user-select: none;
+}
+
+.layer.selected {
+  box-shadow: 0 0 0 2px rgb(50 199 165 / 24%);
+}
+
+.layer:active {
+  cursor: grabbing;
 }
 
 .field {

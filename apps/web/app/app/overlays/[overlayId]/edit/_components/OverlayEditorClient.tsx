@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { type PointerEvent, useEffect, useMemo, useRef, useState } from "react";
 import {
   type AlertBoxLayer,
   type OverlayDocument,
@@ -18,6 +18,14 @@ export function OverlayEditorClient({
   overlayId: string;
   overlayName: string;
 }) {
+  const canvasRef = useRef<HTMLDivElement | null>(null);
+  const dragState = useRef<{
+    pointerId: number;
+    startClientX: number;
+    startClientY: number;
+    startX: number;
+    startY: number;
+  } | null>(null);
   const [document, setDocument] = useState(initialDocument);
   const [browserSourceUrl, setBrowserSourceUrl] = useState<string | null>(null);
   const [publishState, setPublishState] = useState<PublishState>("idle");
@@ -103,6 +111,7 @@ export function OverlayEditorClient({
   }
 
   const selectedAlertLayer = alertLayer;
+  const canvas = document.canvas;
 
   function updateAlertLayer(nextLayer: AlertBoxLayer) {
     setDocument((current) => ({
@@ -113,16 +122,33 @@ export function OverlayEditorClient({
     }));
   }
 
-  function updatePosition(field: "x" | "y", value: string) {
+  function clampLayerPosition(layer: AlertBoxLayer, x: number, y: number) {
+    return {
+      x: Math.max(0, Math.min(x, canvas.width - layer.width)),
+      y: Math.max(0, Math.min(y, canvas.height - layer.height)),
+    };
+  }
+
+  function updateLayerGeometry(
+    field: "x" | "y" | "width" | "height",
+    value: string,
+  ) {
     const parsed = Number(value);
 
     if (!Number.isFinite(parsed)) {
       return;
     }
 
-    updateAlertLayer({
+    const nextLayer = {
       ...selectedAlertLayer,
-      [field]: parsed,
+      [field]:
+        field === "width" || field === "height" ? Math.max(1, parsed) : parsed,
+    };
+    const position = clampLayerPosition(nextLayer, nextLayer.x, nextLayer.y);
+
+    updateAlertLayer({
+      ...nextLayer,
+      ...position,
     });
   }
 
@@ -154,6 +180,71 @@ export function OverlayEditorClient({
       },
     });
   }
+
+  function handleLayerPointerDown(event: PointerEvent<HTMLDivElement>) {
+    if (selectedAlertLayer.locked) {
+      return;
+    }
+
+    event.currentTarget.setPointerCapture(event.pointerId);
+    dragState.current = {
+      pointerId: event.pointerId,
+      startClientX: event.clientX,
+      startClientY: event.clientY,
+      startX: selectedAlertLayer.x,
+      startY: selectedAlertLayer.y,
+    };
+  }
+
+  function handleLayerPointerMove(event: PointerEvent<HTMLDivElement>) {
+    const activeDrag = dragState.current;
+    const canvasElement = canvasRef.current;
+
+    if (
+      !activeDrag ||
+      activeDrag.pointerId !== event.pointerId ||
+      !canvasElement
+    ) {
+      return;
+    }
+
+    const rect = canvasElement.getBoundingClientRect();
+    const deltaX =
+      ((event.clientX - activeDrag.startClientX) / rect.width) * canvas.width;
+    const deltaY =
+      ((event.clientY - activeDrag.startClientY) / rect.height) * canvas.height;
+    const position = clampLayerPosition(
+      selectedAlertLayer,
+      Math.round(activeDrag.startX + deltaX),
+      Math.round(activeDrag.startY + deltaY),
+    );
+
+    updateAlertLayer({
+      ...selectedAlertLayer,
+      ...position,
+    });
+  }
+
+  function handleLayerPointerUp(event: PointerEvent<HTMLDivElement>) {
+    if (dragState.current?.pointerId === event.pointerId) {
+      dragState.current = null;
+    }
+  }
+
+  const previewLayerStyle = {
+    background: selectedAlertLayer.properties.backgroundColor,
+    borderRadius: selectedAlertLayer.properties.borderRadius,
+    color: selectedAlertLayer.properties.textColor,
+    fontSize: selectedAlertLayer.properties.fontSize,
+    fontWeight: selectedAlertLayer.properties.fontWeight,
+    height: `${(selectedAlertLayer.height / canvas.height) * 100}%`,
+    left: `${(selectedAlertLayer.x / canvas.width) * 100}%`,
+    padding: selectedAlertLayer.properties.padding,
+    textAlign: selectedAlertLayer.properties.textAlign,
+    top: `${(selectedAlertLayer.y / canvas.height) * 100}%`,
+    transform: `rotate(${selectedAlertLayer.rotation}deg)`,
+    width: `${(selectedAlertLayer.width / canvas.width) * 100}%`,
+  } as const;
 
   return (
     <main>
@@ -204,8 +295,19 @@ export function OverlayEditorClient({
           </div>
         </aside>
         <div className="canvas-wrap">
-          <div className="canvas" aria-label="Overlay canvas preview">
-            <div className="layer">
+          <div
+            className="canvas"
+            aria-label="Overlay canvas preview"
+            ref={canvasRef}
+          >
+            <div
+              className="layer selected"
+              onPointerDown={handleLayerPointerDown}
+              onPointerCancel={handleLayerPointerUp}
+              onPointerMove={handleLayerPointerMove}
+              onPointerUp={handleLayerPointerUp}
+              style={previewLayerStyle}
+            >
               <strong>{selectedAlertLayer.properties.headlineTemplate}</strong>
               <p>{selectedAlertLayer.properties.bodyTemplate}</p>
             </div>
@@ -234,7 +336,7 @@ export function OverlayEditorClient({
           <label className="field">
             X
             <input
-              onChange={(event) => updatePosition("x", event.target.value)}
+              onChange={(event) => updateLayerGeometry("x", event.target.value)}
               type="number"
               value={selectedAlertLayer.x}
             />
@@ -242,9 +344,31 @@ export function OverlayEditorClient({
           <label className="field">
             Y
             <input
-              onChange={(event) => updatePosition("y", event.target.value)}
+              onChange={(event) => updateLayerGeometry("y", event.target.value)}
               type="number"
               value={selectedAlertLayer.y}
+            />
+          </label>
+          <label className="field">
+            Width
+            <input
+              min={1}
+              onChange={(event) =>
+                updateLayerGeometry("width", event.target.value)
+              }
+              type="number"
+              value={selectedAlertLayer.width}
+            />
+          </label>
+          <label className="field">
+            Height
+            <input
+              min={1}
+              onChange={(event) =>
+                updateLayerGeometry("height", event.target.value)
+              }
+              type="number"
+              value={selectedAlertLayer.height}
             />
           </label>
           <label className="field">
