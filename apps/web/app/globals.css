@@ -165,9 +165,31 @@ select {
   opacity: 0.65;
 }
 
+.button.secondary {
+  background: var(--panel-strong);
+  border: 1px solid var(--line);
+  color: var(--text);
+}
+
 .form-error {
   color: var(--danger);
   margin: 0 0 12px;
+}
+
+.notice {
+  background: #11151a;
+  border-bottom: 1px solid var(--line);
+  color: var(--muted);
+  padding: 10px 14px;
+}
+
+.notice.error {
+  color: var(--danger);
+}
+
+.stack {
+  display: grid;
+  gap: 16px;
 }
 
 .toolbar {

@@ -50,6 +50,9 @@ export default async function OverlaysPage() {
               >
                 Open studio
               </Link>
+              <Link href={`/app/overlays/${overlay.id}/versions`}>
+                View versions
+              </Link>
             </section>
           ))}
         </div>

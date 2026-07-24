@@ -16,7 +16,7 @@
 - [x] Add PostgreSQL and Redis services.
 - [x] Add typed environment validation.
 - [x] Add `/health/live` and `/health/ready`.
-- [ ] Add first Prisma migration.
+- [x] Add first Prisma migration.
 - [ ] Add production image publishing.
 - [ ] Add migration compatibility check to readiness.
 
@@ -55,10 +55,10 @@
 
 ## Phase 5: Publishing
 
-- [ ] Implement publish transaction.
-- [ ] Add immutable overlay versions.
-- [ ] Add browser-source token generation and rotation.
-- [ ] Add rollback.
+- [x] Implement publish transaction.
+- [x] Add immutable overlay versions.
+- [x] Add browser-source token generation and rotation.
+- [x] Add rollback.
 
 ## Phase 6: Event System
 
@@ -72,7 +72,7 @@
 ## Phase 7: Browser Source
 
 - [x] Add tokenized browser-source route placeholder.
-- [ ] Load currently published overlay by token.
+- [x] Load currently published overlay by token.
 - [ ] Add local WebSocket gateway.
 - [ ] Add alert queue and acknowledgement.
 - [ ] Add reconnect and diagnostics mode.

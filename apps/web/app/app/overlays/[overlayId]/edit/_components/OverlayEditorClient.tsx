@@ -7,6 +7,7 @@ import {
 } from "@streamarr/validation";
 
 type SaveState = "saved" | "saving" | "error";
+type PublishState = "idle" | "publishing" | "published" | "error";
 
 export function OverlayEditorClient({
   initialDocument,
@@ -18,6 +19,9 @@ export function OverlayEditorClient({
   overlayName: string;
 }) {
   const [document, setDocument] = useState(initialDocument);
+  const [browserSourceUrl, setBrowserSourceUrl] = useState<string | null>(null);
+  const [publishState, setPublishState] = useState<PublishState>("idle");
+  const [publishedVersion, setPublishedVersion] = useState<number | null>(null);
   const [saveState, setSaveState] = useState<SaveState>("saved");
   const alertLayer = useMemo(
     () =>
@@ -47,6 +51,52 @@ export function OverlayEditorClient({
 
     return () => window.clearTimeout(timeout);
   }, [document, initialDocument, overlayId]);
+
+  async function saveDraftNow(): Promise<boolean> {
+    setSaveState("saving");
+
+    const response = await fetch(`/api/overlays/${overlayId}/draft`, {
+      body: JSON.stringify({ document }),
+      headers: {
+        "Content-Type": "application/json",
+      },
+      method: "PATCH",
+    });
+
+    setSaveState(response.ok ? "saved" : "error");
+    return response.ok;
+  }
+
+  async function publishOverlay() {
+    setPublishState("publishing");
+
+    const draftSaved = await saveDraftNow();
+
+    if (!draftSaved) {
+      setPublishState("error");
+      return;
+    }
+
+    const response = await fetch(`/api/overlays/${overlayId}/publish`, {
+      method: "POST",
+    });
+
+    if (!response.ok) {
+      setPublishState("error");
+      return;
+    }
+
+    const body = (await response.json()) as {
+      browserSourceUrl: string | null;
+      version: {
+        version: number;
+      };
+    };
+
+    setBrowserSourceUrl(body.browserSourceUrl);
+    setPublishedVersion(body.version.version);
+    setPublishState("published");
+  }
 
   if (!alertLayer) {
     return null;
@@ -119,10 +169,32 @@ export function OverlayEditorClient({
         <button type="button">Undo</button>
         <button type="button">Redo</button>
         <button type="button">Preview</button>
-        <button className="button" type="button">
-          Publish
+        <button
+          className="button"
+          disabled={publishState === "publishing"}
+          onClick={publishOverlay}
+          type="button"
+        >
+          {publishState === "publishing" ? "Publishing..." : "Publish"}
         </button>
       </div>
+      {publishState === "published" ? (
+        <div className="notice">
+          Published version {publishedVersion}
+          {browserSourceUrl ? (
+            <>
+              {" "}
+              <a href={browserSourceUrl} rel="noreferrer" target="_blank">
+                Open browser source
+              </a>
+            </>
+          ) : (
+            ". Existing browser source URL remains active."
+          )}
+        </div>
+      ) : publishState === "error" ? (
+        <div className="notice error">Publish failed.</div>
+      ) : null}
       <section className="editor">
         <aside className="panel">
           <h2>Layers</h2>
