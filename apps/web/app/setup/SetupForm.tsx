@@ -10,12 +10,12 @@ type SetupState = {
   submitting: boolean;
 };
 
-export function SetupForm() {
+export function SetupForm({ initialError }: { initialError: string | null }) {
   const router = useRouter();
   const [state, setState] = useState<SetupState>({
     email: "",
     password: "",
-    error: null,
+    error: initialError,
     submitting: false,
   });
 
@@ -51,19 +51,32 @@ export function SetupForm() {
       submitting: true,
     }));
 
-    const response = await fetch("/api/setup", {
-      body: JSON.stringify({
-        email: state.email,
-        password: state.password,
-      }),
-      headers: {
-        "Content-Type": "application/json",
-      },
-      method: "POST",
-    });
+    let response: Response;
+
+    try {
+      response = await fetch("/api/setup", {
+        body: JSON.stringify({
+          email: state.email,
+          password: state.password,
+        }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+        method: "POST",
+      });
+    } catch {
+      setState((current) => ({
+        ...current,
+        error: "Setup request failed. Check that the dev server is running.",
+        submitting: false,
+      }));
+      return;
+    }
 
     if (!response.ok) {
-      const result = (await response.json()) as { error?: string };
+      const result = (await response.json().catch(() => ({}))) as {
+        error?: string;
+      };
       setState((current) => ({
         ...current,
         error: result.error ?? "Setup failed.",
@@ -77,11 +90,17 @@ export function SetupForm() {
   }
 
   return (
-    <form className="card" onSubmit={handleSubmit}>
+    <form
+      action="/api/setup"
+      className="card"
+      method="post"
+      onSubmit={handleSubmit}
+    >
       <label className="field">
         Email
         <input
           autoComplete="email"
+          name="email"
           onChange={(event) => updateField("email", event.target.value)}
           placeholder="owner@example.com"
           required
@@ -94,6 +113,7 @@ export function SetupForm() {
         <input
           autoComplete="new-password"
           minLength={8}
+          name="password"
           onChange={(event) => updateField("password", event.target.value)}
           required
           type="password"

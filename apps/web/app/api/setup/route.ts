@@ -1,3 +1,5 @@
+import { NextResponse } from "next/server";
+
 import { createUserSession, hashPassword } from "@streamarr/auth";
 import { prisma } from "@streamarr/database";
 
@@ -6,6 +8,54 @@ import { requireSameOrigin } from "@/server/requestGuards";
 
 const minimumPasswordLength = 8;
 
+function redirectToSetupWithError(request: Request, error: string): Response {
+  const url = new URL("/setup", request.url);
+  url.searchParams.set("error", error);
+
+  return NextResponse.redirect(url, 303);
+}
+
+function errorResponse(
+  request: Request,
+  error: string,
+  status: number,
+  nativeForm: boolean,
+) {
+  if (nativeForm) {
+    return redirectToSetupWithError(request, error);
+  }
+
+  return Response.json({ error }, { status });
+}
+
+async function parseSetupRequest(request: Request) {
+  const contentType = request.headers.get("content-type") ?? "";
+
+  if (contentType.includes("application/json")) {
+    const body = (await request.json()) as {
+      email?: unknown;
+      password?: unknown;
+      workspaceName?: unknown;
+    };
+
+    return {
+      body,
+      nativeForm: false,
+    };
+  }
+
+  const formData = await request.formData();
+
+  return {
+    body: {
+      email: formData.get("email"),
+      password: formData.get("password"),
+      workspaceName: formData.get("workspaceName"),
+    },
+    nativeForm: true,
+  };
+}
+
 export async function POST(request: Request) {
   const originError = requireSameOrigin(request);
 
@@ -13,11 +63,7 @@ export async function POST(request: Request) {
     return originError;
   }
 
-  const body = (await request.json()) as {
-    email?: unknown;
-    password?: unknown;
-    workspaceName?: unknown;
-  };
+  const { body, nativeForm } = await parseSetupRequest(request);
 
   const email =
     typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
@@ -28,18 +74,20 @@ export async function POST(request: Request) {
       : "Default workspace";
 
   if (!email.includes("@")) {
-    return Response.json(
-      { error: "Enter a valid email address." },
-      { status: 400 },
+    return errorResponse(
+      request,
+      "Enter a valid email address.",
+      400,
+      nativeForm,
     );
   }
 
   if (password.length < minimumPasswordLength) {
-    return Response.json(
-      {
-        error: `Use at least ${minimumPasswordLength} characters for the password.`,
-      },
-      { status: 400 },
+    return errorResponse(
+      request,
+      `Use at least ${minimumPasswordLength} characters for the password.`,
+      400,
+      nativeForm,
     );
   }
 
@@ -113,13 +161,23 @@ export async function POST(request: Request) {
     });
 
   if (!user) {
-    return Response.json(
-      { error: "Setup has already been completed. Sign in instead." },
-      { status: 409 },
+    return errorResponse(
+      request,
+      "Setup has already been completed. Sign in instead.",
+      409,
+      nativeForm,
     );
   }
 
   const session = await createUserSession(user.id);
+  const sessionCookie = `${sessionCookieName}=${session.token}; Path=/; HttpOnly; SameSite=Lax; Expires=${session.expiresAt.toUTCString()}`;
+
+  if (nativeForm) {
+    const response = NextResponse.redirect(new URL("/app", request.url), 303);
+    response.headers.set("Set-Cookie", sessionCookie);
+
+    return response;
+  }
 
   return Response.json(
     {
@@ -131,7 +189,7 @@ export async function POST(request: Request) {
     },
     {
       headers: {
-        "Set-Cookie": `${sessionCookieName}=${session.token}; Path=/; HttpOnly; SameSite=Lax; Expires=${session.expiresAt.toUTCString()}`,
+        "Set-Cookie": sessionCookie,
       },
     },
   );
