@@ -5,16 +5,42 @@ type RateLimitEntry = {
 
 const rateLimitStore = new Map<string, RateLimitEntry>();
 
-export function requireSameOrigin(request: Request): Response | null {
-  const origin = request.headers.get("origin");
+const localHostnames = new Set(["localhost", "127.0.0.1", "0.0.0.0", "[::1]"]);
 
-  if (!origin) {
+function configuredAppOrigin(): string {
+  return new URL(process.env.APP_URL ?? "http://localhost:3000").origin;
+}
+
+function isLocalDevelopmentAlias(origin: URL, expected: URL): boolean {
+  if (process.env.NODE_ENV === "production") {
+    return false;
+  }
+
+  return (
+    origin.protocol === expected.protocol &&
+    origin.port === expected.port &&
+    localHostnames.has(origin.hostname) &&
+    localHostnames.has(expected.hostname)
+  );
+}
+
+export function requireSameOrigin(request: Request): Response | null {
+  const originHeader = request.headers.get("origin");
+
+  if (!originHeader) {
     return null;
   }
 
-  const requestOrigin = new URL(request.url).origin;
+  const origin = new URL(originHeader);
+  const requestOrigin = new URL(request.url);
+  const appOrigin = new URL(configuredAppOrigin());
 
-  if (origin !== requestOrigin) {
+  if (
+    origin.origin !== requestOrigin.origin &&
+    origin.origin !== appOrigin.origin &&
+    !isLocalDevelopmentAlias(origin, requestOrigin) &&
+    !isLocalDevelopmentAlias(origin, appOrigin)
+  ) {
     return Response.json({ error: "Invalid request origin." }, { status: 403 });
   }
 
