@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   type AlertBoxLayer,
   type StreamEventEnvelope,
@@ -70,12 +70,12 @@ export function BrowserSourceRuntime({
   const [connectionState, setConnectionState] =
     useState<ConnectionState>("connecting");
   const [diagnostics, setDiagnostics] = useState<string>("Connecting");
-  const runtimeUrl = useMemo(() => gatewayUrl(token), [token]);
 
   useEffect(() => {
     let reconnectTimer: number | undefined;
     let alertTimer: number | undefined;
     let closedByEffect = false;
+    const runtimeUrl = gatewayUrl(token);
 
     function connect() {
       setConnectionState("connecting");
@@ -154,7 +154,7 @@ export function BrowserSourceRuntime({
       window.clearTimeout(reconnectTimer);
       window.clearTimeout(alertTimer);
     };
-  }, [alertLayer, runtimeUrl]);
+  }, [alertLayer, token]);
 
   return (
     <>

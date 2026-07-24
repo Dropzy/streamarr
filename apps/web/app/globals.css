@@ -228,6 +228,22 @@ select {
   color: var(--warn);
 }
 
+.source-empty-state {
+  align-items: center;
+  color: #f4f7fb;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  inset: 0;
+  justify-content: center;
+  position: fixed;
+  text-align: center;
+}
+
+.source-empty-state span {
+  color: #aab4c2;
+}
+
 .toolbar {
   align-items: center;
   border-bottom: 1px solid var(--line);

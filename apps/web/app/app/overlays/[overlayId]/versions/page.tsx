@@ -45,6 +45,7 @@ export default async function OverlayVersionsPage({
   }
 
   const source = overlay.browserSources[0];
+  const hasPublishedVersion = Boolean(overlay.publishedVersionId);
 
   return (
     <AppShell>
@@ -58,7 +59,10 @@ export default async function OverlayVersionsPage({
               {source.rotatedAt
                 ? ` and last rotated ${source.rotatedAt.toLocaleString()}`
                 : ""}
-              . Raw tokens are only shown when created or rotated.
+              . Raw tokens are only shown when created or rotated.{" "}
+              {hasPublishedVersion
+                ? "This browser source has a live published version."
+                : "Publish the overlay before using this browser source in OBS."}
             </p>
           ) : (
             <p className="muted">

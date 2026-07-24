@@ -10,6 +10,8 @@ import {
 import { hashBrowserSourceToken } from "@/server/browserSourceTokens";
 import { BrowserSourceRuntime } from "./BrowserSourceRuntime";
 
+export const dynamic = "force-dynamic";
+
 function layerStyle(layer: AlertBoxLayer, document: OverlayDocument) {
   return {
     background: layer.properties.backgroundColor,
@@ -70,8 +72,29 @@ export default async function BrowserSourcePage({
       })
     : null;
 
-  if (!browserSource || !publishedVersion) {
+  if (!browserSource) {
     notFound();
+  }
+
+  if (!publishedVersion) {
+    return (
+      <main
+        style={{
+          background: "#000",
+          height: "100vh",
+          margin: 0,
+          overflow: "hidden",
+          position: "relative",
+          width: "100vw",
+        }}
+      >
+        <div className="source-empty-state">
+          <strong>No published overlay version</strong>
+          <span>Publish this overlay before using the browser source.</span>
+        </div>
+        <BrowserSourceRuntime alertLayer={null} token={browserSourceToken} />
+      </main>
+    );
   }
 
   const document = overlayDocumentSchema.parse(publishedVersion.document);
