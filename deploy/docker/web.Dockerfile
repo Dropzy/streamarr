@@ -1,4 +1,4 @@
-FROM node:22-alpine AS base
+FROM node:25-alpine AS base
 WORKDIR /app
 RUN corepack enable
 
@@ -16,7 +16,7 @@ FROM deps AS builder
 COPY . .
 RUN NEXT_STANDALONE=true pnpm --filter @streamarr/web build
 
-FROM node:22-alpine AS runner
+FROM node:25-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 COPY --from=builder /app/apps/web/.next/standalone ./
